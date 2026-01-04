@@ -62,7 +62,7 @@ export const SEOAudit: React.FC = () => {
   }, [handleRunAudit]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-slate-100">
       <header className="sticky top-0 z-200 bg-white border-b border-slate-200 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -75,7 +75,7 @@ export const SEOAudit: React.FC = () => {
               </h1>
             </div>
             <p
-              className="text-[11px] text-slate-400 mt-1 line-clamp-1 truncate block"
+              className="text-[11px] text-slate-500 mt-1 line-clamp-1 truncate block"
               title={currentUrl}
             >
               {currentUrl || "Initializing analyzer..."}
@@ -94,7 +94,7 @@ export const SEOAudit: React.FC = () => {
       {report ? (
         <AuditResults report={report} />
       ) : (
-        <main className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
+        <main className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
           <RefreshCw size={40} className="animate-spin text-indigo-600 mb-4" />
           <p className="text-sm font-medium">Analyzing Page Architecture...</p>
         </main>

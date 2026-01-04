@@ -53,7 +53,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score }) => {
           {score}
         </text>
       </svg>
-      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider -mt-2">
+      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider -mt-2">
         SEO Health Score
       </div>
     </div>
