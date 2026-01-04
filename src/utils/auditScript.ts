@@ -32,14 +32,19 @@ export const runPageAudit = () => {
   const getLinks = () => {
     const links = Array.from(document.querySelectorAll("a"));
     const currentHost = window.location.hostname;
-    return links.map((a) => ({
-      href: a.href,
-      text: (a.textContent || "").trim(),
-      isInternal: a.hostname === currentHost,
-      isExternal: a.hostname !== currentHost && a.hostname !== "",
-      rel: a.rel || "",
-      target: a.target || "",
-    }));
+    return links
+      .filter((a) => {
+        const href = a.getAttribute("href");
+        return href && !href.startsWith("#");
+      })
+      .map((a) => ({
+        href: a.href,
+        text: (a.textContent || "").trim(),
+        isInternal: a.hostname === currentHost,
+        isExternal: a.hostname !== currentHost && a.hostname !== "",
+        rel: a.rel || "",
+        target: a.target || "",
+      }));
   };
 
   const getStructuredData = () => {

@@ -12,7 +12,6 @@ import {
   ExternalLink,
   ImageIcon,
   ChevronDown,
-  ChevronUp,
   Search,
   Download,
 } from "lucide-react";
@@ -217,21 +216,64 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
           return matchesCategory && matchesSearch;
         });
 
+        const handleExportCSV = () => {
+          const headers = ["Text", "URL", "Type", "Rel", "Target"];
+          const rows = filteredLinks.map((l) => [
+            `"${(l.text || "No anchor text").replace(/"/g, '""')}"`,
+            `"${l.href.replace(/"/g, '""')}"`,
+            l.isInternal ? "Internal" : "External",
+            `"${(l.rel || "").replace(/"/g, '""')}"`,
+            `"${(l.target || "").replace(/"/g, '""')}"`,
+          ]);
+
+          const csvContent = [
+            headers.join(","),
+            ...rows.map((r) => r.join(",")),
+          ].join("\n");
+
+          const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute(
+            "download",
+            `seo_links_export_${new Date().getTime()}.csv`
+          );
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+
         return (
           <div className="animate-in fade-in duration-300">
-            <div className="bg-slate-50/30 border-b border-slate-100 flex px-4 pb-4">
-              <div className="text-[14px] font-bold text-slate-600 uppercase tracking-widest">
-                Link Details & Metadata
+            <div className="flex items-center justify-between px-4 pb-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
+                  Link Inventory
+                </h3>
+                <p className="text-[11px] font-medium text-slate-500">
+                  {report.raw.links.length} Discovered URLs on Page
+                </p>
               </div>
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+              >
+                <Download size={13} strokeWidth={2.5} />
+                Export CSV
+              </button>
             </div>
-            <div className="bg-white">
-              <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
-                <div className="flex items-center bg-white border border-slate-200 rounded-lg">
+            <div className="bg-white border-y border-slate-100">
+              <div className="p-2.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
+                <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
                   <button
                     onClick={() => setLinkFilter("all")}
-                    className={`p-2.5 text-[11px] font-bold uppercase tracking-tight transition-all rounded-l-md ${
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
                       linkFilter === "all"
-                        ? "bg-indigo-600 text-white shadow-sm"
+                        ? "bg-slate-800 text-white shadow-sm"
                         : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
@@ -239,9 +281,9 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
                   </button>
                   <button
                     onClick={() => setLinkFilter("internal")}
-                    className={`p-2.5 text-[11px] font-bold uppercase tracking-tight transition-all ${
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all border-x border-slate-100 ${
                       linkFilter === "internal"
-                        ? "bg-indigo-600 text-white shadow-sm"
+                        ? "bg-slate-800 text-white shadow-sm border-transparent"
                         : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
@@ -249,9 +291,9 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
                   </button>
                   <button
                     onClick={() => setLinkFilter("external")}
-                    className={`p-2.5 text-[11px] font-bold uppercase tracking-tight transition-all rounded-r-md ${
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
                       linkFilter === "external"
-                        ? "bg-indigo-600 text-white shadow-sm"
+                        ? "bg-slate-800 text-white shadow-sm"
                         : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
@@ -259,22 +301,22 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
                   </button>
                 </div>
 
-                <div className="relative flex-1 max-w-[140px]">
+                <div className="relative flex-1 max-w-[150px]">
                   <Search
-                    size={14}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"
+                    size={12}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
                     type="text"
                     placeholder="Search links..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-slate-200 pl-8 pr-3 py-2 text-[13px] font-medium text-slate-800 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-md"
+                    className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 rounded-md transition-all"
                   />
                 </div>
               </div>
 
-              <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+              <div className="divide-y divide-slate-50 max-h-[550px] overflow-y-auto">
                 {filteredLinks.map((link, idx) => {
                   const isExpanded = expandedLinkId === idx;
                   return (
@@ -283,84 +325,90 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
                         onClick={() =>
                           setExpandedLinkId(isExpanded ? null : idx)
                         }
-                        className="flex items-center gap-3 px-4 py-4 hover:bg-slate-50 transition-colors text-left group"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left group"
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-[15px] font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[14px] font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
                               {link.text || (
-                                <span className="text-slate-500 italic font-normal">
+                                <span className="text-slate-400 italic font-normal">
                                   No anchor text
                                 </span>
                               )}
                             </span>
                             {link.isInternal ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                                INT
+                              <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                Internal
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                                EXT
+                              <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-amber-100/50">
+                                External
                               </span>
                             )}
                           </div>
-                          <div className="text-[12px] text-slate-400 truncate">
+                          <div className="text-[11px] text-slate-400 truncate font-normal">
                             {link.href}
                           </div>
                         </div>
-                        {isExpanded ? (
-                          <ChevronUp size={18} className="text-indigo-500" />
-                        ) : (
+                        <div
+                          className={`transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        >
                           <ChevronDown
-                            size={18}
-                            className="text-slate-500 group-hover:text-slate-500"
+                            size={16}
+                            className={`${
+                              isExpanded
+                                ? "text-indigo-500"
+                                : "text-slate-300 group-hover:text-slate-400"
+                            }`}
                           />
-                        )}
+                        </div>
                       </button>
 
                       {isExpanded && (
-                        <div className="bg-slate-100 p-5 border-t border-slate-100 space-y-5 animate-in slide-in-from-top-1 duration-200">
+                        <div className="bg-slate-50/50 p-4 border-t border-slate-50 space-y-4 animate-in slide-in-from-top-1 duration-200">
                           <div className="grid gap-4">
                             <div>
-                              <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                Full Destination URL
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                Destination URL
                               </div>
                               <div className="flex items-start gap-2">
-                                <span className="text-[13px] text-slate-700 break-all bg-white border border-slate-200 p-3 block flex-1 rounded-lg font-medium">
+                                <div className="text-[12px] text-slate-600 break-all bg-white border border-slate-100 p-2.5 flex-1 rounded-md font-medium leading-relaxed">
                                   {link.href}
-                                </span>
+                                </div>
                                 <a
                                   href={link.href}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="p-3 bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg"
+                                  className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
                                 >
-                                  <ExternalLink size={16} />
+                                  <ExternalLink size={14} />
                                 </a>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                                   Rel Attribute
                                 </div>
-                                <div className="text-[13px] font-medium text-slate-700 bg-white border border-slate-200 p-3 truncate rounded-lg">
+                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
                                   {link.rel || (
-                                    <span className="text-slate-500 italic font-normal">
-                                      none defined
+                                    <span className="text-slate-300 italic font-normal">
+                                      none
                                     </span>
                                   )}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                  Target Frame
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                  Target
                                 </div>
-                                <div className="text-[13px] font-medium text-slate-700 bg-white border border-slate-200 p-3 truncate rounded-lg">
+                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
                                   {link.target || (
-                                    <span className="text-slate-500 italic font-normal">
-                                      _self (default)
+                                    <span className="text-slate-300 italic font-normal">
+                                      _self
                                     </span>
                                   )}
                                 </div>
@@ -373,11 +421,11 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
                   );
                 })}
                 {filteredLinks.length === 0 && (
-                  <div className="py-20 text-center">
-                    <p className="text-slate-500 text-sm font-medium">
+                  <div className="py-20 text-center bg-white">
+                    <p className="text-slate-400 text-[13px] font-medium">
                       {searchQuery
                         ? `No matches for "${searchQuery}"`
-                        : `No ${linkFilter} links found.`}
+                        : `No content to display.`}
                     </p>
                   </div>
                 )}
