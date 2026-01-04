@@ -37,6 +37,8 @@ export const runPageAudit = () => {
       text: (a.textContent || "").trim(),
       isInternal: a.hostname === currentHost,
       isExternal: a.hostname !== currentHost && a.hostname !== "",
+      rel: a.rel || "",
+      target: a.target || "",
     }));
   };
 

@@ -4,6 +4,9 @@
   body {
     @apply bg-slate-50 text-slate-900 leading-tight font-sans;
   }
+  button {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {

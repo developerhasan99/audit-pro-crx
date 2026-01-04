@@ -82,7 +82,7 @@ export const SEOAudit: React.FC = () => {
             </p>
           </div>
           <button
-            className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-lg p-2 transition-colors shadow-sm"
+            className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-lg p-2 transition-colors"
             onClick={handleRunAudit}
             disabled={loading}
           >
