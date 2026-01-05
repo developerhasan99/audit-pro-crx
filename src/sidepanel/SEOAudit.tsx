@@ -39,6 +39,56 @@ export const SEOAudit: React.FC = () => {
     }
   }, []);
 
+  const handleLocateImage = useCallback(async (src: string, alt?: string) => {
+    try {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (!tab?.id) return;
+
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (imageSrc: string, imageAlt?: string) => {
+          // Find the locate function on the page or define it
+          const images = Array.from(document.querySelectorAll("img"));
+          const target =
+            images.find(
+              (img) =>
+                img.src === imageSrc && (!imageAlt || img.alt === imageAlt)
+            ) || images.find((img) => img.src === imageSrc);
+
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            const originalTransition = target.style.transition;
+            const originalOutline = target.style.outline;
+            const originalOutlineOffset = target.style.outlineOffset;
+            const originalZIndex = target.style.zIndex;
+
+            target.style.transition = "all 0.3s ease";
+            target.style.outline = "4px solid #4f46e5";
+            target.style.outlineOffset = "4px";
+            target.style.zIndex = "9999999";
+
+            setTimeout(() => {
+              target.style.outline = "20px solid transparent";
+              setTimeout(() => {
+                target.style.transition = originalTransition;
+                target.style.outline = originalOutline;
+                target.style.outlineOffset = originalOutlineOffset;
+                target.style.zIndex = originalZIndex;
+              }, 300);
+            }, 2000);
+          }
+        },
+        args: [src, alt],
+      });
+    } catch (error) {
+      console.error("Locate failed:", error);
+    }
+  }, []);
+
   useEffect(() => {
     handleRunAudit();
 
@@ -92,7 +142,7 @@ export const SEOAudit: React.FC = () => {
       </header>
 
       {report ? (
-        <AuditResults report={report} />
+        <AuditResults report={report} onLocateImage={handleLocateImage} />
       ) : (
         <main className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
           <RefreshCw size={40} className="animate-spin text-indigo-600 mb-4" />

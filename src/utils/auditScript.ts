@@ -20,13 +20,24 @@ export const runPageAudit = () => {
 
   const getImages = () => {
     const imgs = Array.from(document.querySelectorAll("img"));
-    return imgs.map((img) => ({
-      src: img.src,
-      alt: img.alt,
-      width: img.naturalWidth || img.width,
-      height: img.naturalHeight || img.height,
-      isVisible: img.offsetParent !== null,
-    }));
+    return imgs.map((img) => {
+      // Try to get file size from performance entries
+      const perfEntry = performance.getEntriesByName(
+        img.src
+      )[0] as PerformanceResourceTiming;
+      const fileSize = perfEntry ? perfEntry.encodedBodySize : undefined;
+
+      return {
+        src: img.src,
+        alt: img.alt,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        renderedWidth: img.width,
+        renderedHeight: img.height,
+        fileSize: fileSize,
+        isVisible: img.offsetParent !== null,
+      };
+    });
   };
 
   const getLinks = () => {
@@ -118,4 +129,39 @@ export const runPageAudit = () => {
     mobile: getMobileSignals(),
     security: getSecuritySignals(),
   };
+};
+
+export const locateImageOnPage = (src: string, alt?: string) => {
+  const images = Array.from(document.querySelectorAll("img"));
+  const target =
+    images.find((img) => img.src === src && (!alt || img.alt === alt)) ||
+    images.find((img) => img.src === src);
+
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Add highlight effect
+    const originalTransition = target.style.transition;
+    const originalOutline = target.style.outline;
+    const originalOutlineOffset = target.style.outlineOffset;
+    const originalZIndex = target.style.zIndex;
+
+    target.style.transition = "all 0.3s ease";
+    target.style.outline = "4px solid #4f46e5";
+    target.style.outlineOffset = "4px";
+    target.style.zIndex = "9999999";
+
+    setTimeout(() => {
+      target.style.outline = "20px solid transparent";
+      setTimeout(() => {
+        target.style.transition = originalTransition;
+        target.style.outline = originalOutline;
+        target.style.outlineOffset = originalOutlineOffset;
+        target.style.zIndex = originalZIndex;
+      }, 300);
+    }, 2000);
+
+    return true;
+  }
+  return false;
 };

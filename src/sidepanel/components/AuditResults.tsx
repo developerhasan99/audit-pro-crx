@@ -14,31 +14,46 @@ import {
   ChevronDown,
   Search,
   Download,
+  MapPin,
 } from "lucide-react";
 
 interface AuditResultsProps {
   report: AuditReport;
+  onLocateImage?: (src: string, alt?: string) => void;
 }
+
+const formatFileSize = (bytes?: number) => {
+  if (bytes === undefined || bytes === 0) return "Unknown size";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
 
 const TABS = [
   { id: "Overview", label: "Overview", icon: BarChart3 },
   { id: "Issues", label: "Issues", icon: AlertTriangle },
   { id: "Content", label: "Content", icon: FileText },
+  { id: "Images", label: "Images", icon: ImageIcon },
   { id: "Links", label: "Links", icon: Link2 },
 ];
 
-export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
+export const AuditResults: React.FC<AuditResultsProps> = ({
+  report,
+  onLocateImage,
+}) => {
   const [activeTab, setActiveTab] = useState("Overview");
   const [expandedLinkId, setExpandedLinkId] = useState<number | null>(null);
+  const [expandedImageId, setExpandedImageId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [linkFilter, setLinkFilter] = useState<"all" | "internal" | "external">(
     "all"
   );
+  const [imageFilter, setImageFilter] = useState<"all" | "missing-alt">("all");
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "Overview":
-        // ... previous implementation (no changes here but kept for context if needed, but I'll use target/replacement carefully)
         return (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex justify-center py-6 bg-white border border-slate-200 rounded-2xl mx-4 my-6 shadow-sm">
@@ -149,56 +164,269 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
                 )}
               </div>
             </section>
+          </div>
+        );
 
-            <section>
-              <h3 className="text-[14px] font-bold text-slate-600 uppercase tracking-widest mb-5">
-                Images Analysis ({report.raw.images.length})
-              </h3>
-              <div className="grid gap-4">
-                {report.raw.images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="flex gap-4 p-4 bg-white border border-slate-200 hover:border-indigo-200 transition-all rounded-xl shadow-sm"
+      case "Images":
+        const missingAltImages = report.raw.images.filter((img) => !img.alt);
+        const filteredImages = report.raw.images.filter((img) => {
+          const matchesFilter =
+            imageFilter === "all" ||
+            (imageFilter === "missing-alt" && !img.alt);
+          const matchesSearch =
+            !searchQuery ||
+            img.alt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            img.src.toLowerCase().includes(searchQuery.toLowerCase());
+          return matchesFilter && matchesSearch;
+        });
+
+        const handleExportImagesCSV = () => {
+          const headers = ["Source URL", "Alt Text", "Width", "Height"];
+          const rows = filteredImages.map((img) => [
+            `"${img.src.replace(/"/g, '""')}"`,
+            `"${(img.alt || "").replace(/"/g, '""')}"`,
+            img.naturalWidth || "",
+            img.naturalHeight || "",
+            img.renderedWidth || "",
+            img.renderedHeight || "",
+            img.fileSize || "",
+          ]);
+
+          const csvContent = [
+            headers.join(","),
+            ...rows.map((r) => r.join(",")),
+          ].join("\n");
+
+          const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute(
+            "download",
+            `seo_images_export_${new Date().getTime()}.csv`
+          );
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+
+        return (
+          <div className="animate-in fade-in duration-300">
+            <div className="flex items-center justify-between px-4 pb-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
+                  Image Inventory
+                </h3>
+                <p className="text-[11px] font-medium text-slate-500">
+                  {report.raw.images.length} Discovered Images on Page
+                </p>
+              </div>
+              <button
+                onClick={handleExportImagesCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+              >
+                <Download size={13} strokeWidth={2.5} />
+                Export CSV
+              </button>
+            </div>
+            <div className="bg-white border-y border-slate-100">
+              <div className="p-2.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
+                <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setImageFilter("all")}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
+                      imageFilter === "all"
+                        ? "bg-slate-800 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    }`}
                   >
-                    <div className="w-14 h-14 bg-slate-100 shrink-0 overflow-hidden flex items-center justify-center border border-slate-100 rounded-lg">
-                      {img.src ? (
-                        <img
-                          src={img.src}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ImageIcon size={24} className="text-slate-500" />
+                    All ({report.raw.images.length})
+                  </button>
+                  <button
+                    onClick={() => setImageFilter("missing-alt")}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all border-l border-slate-100 ${
+                      imageFilter === "missing-alt"
+                        ? "bg-slate-800 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    Missing Alt ({missingAltImages.length})
+                  </button>
+                </div>
+
+                <div className="relative flex-1 max-w-[150px]">
+                  <Search
+                    size={12}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search images..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 rounded-md transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-50 max-h-[550px] overflow-y-auto">
+                {filteredImages.map((img, idx) => {
+                  const isExpanded = expandedImageId === idx;
+                  return (
+                    <div key={idx} className="flex flex-col">
+                      <button
+                        onClick={() =>
+                          setExpandedImageId(isExpanded ? null : idx)
+                        }
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left group"
+                      >
+                        <div className="w-10 h-10 bg-slate-100 shrink-0 overflow-hidden flex items-center justify-center border border-slate-100 rounded-lg">
+                          {img.src ? (
+                            <img
+                              src={img.src}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon size={20} className="text-slate-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span
+                              className={`text-[14px] font-semibold truncate group-hover:text-indigo-600 transition-colors ${
+                                img.alt
+                                  ? "text-slate-800"
+                                  : "text-red-500 italic font-normal"
+                              }`}
+                            >
+                              {img.alt || "Missing alternative text"}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate font-normal">
+                            {img.src}
+                          </div>
+                        </div>
+                        <div
+                          className={`transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        >
+                          <ChevronDown
+                            size={16}
+                            className={`${
+                              isExpanded
+                                ? "text-indigo-500"
+                                : "text-slate-300 group-hover:text-slate-400"
+                            }`}
+                          />
+                        </div>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="bg-slate-50/50 p-4 border-t border-slate-50 space-y-4 animate-in slide-in-from-top-1 duration-200">
+                          <div className="grid gap-4">
+                            <div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                Image Source URL
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <div className="text-[12px] text-slate-600 break-all bg-white border border-slate-100 p-2.5 flex-1 rounded-md font-medium leading-relaxed">
+                                  {img.src}
+                                </div>
+                                <a
+                                  href={img.src}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
+                                  title="Open in New Tab"
+                                >
+                                  <ExternalLink size={14} />
+                                </a>
+                                <button
+                                  onClick={() =>
+                                    onLocateImage?.(img.src, img.alt)
+                                  }
+                                  className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
+                                  title="Locate on Page"
+                                >
+                                  <MapPin size={14} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                  Alt Text
+                                </div>
+                                <div
+                                  className={`text-[12px] font-medium bg-white border border-slate-100 p-2.5 rounded-md ${
+                                    img.alt ? "text-slate-600" : "text-red-500"
+                                  }`}
+                                >
+                                  {img.alt || "None"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                  File Size
+                                </div>
+                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
+                                  {formatFileSize(img.fileSize)}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                  Natural Resolution
+                                </div>
+                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
+                                  {img.naturalWidth && img.naturalHeight
+                                    ? `${img.naturalWidth} × ${img.naturalHeight} px`
+                                    : "Unknown"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                  Rendered Resolution
+                                </div>
+                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md flex items-center gap-2">
+                                  {img.renderedWidth && img.renderedHeight
+                                    ? `${img.renderedWidth} × ${img.renderedHeight} px`
+                                    : "Unknown"}
+                                  {img.naturalWidth &&
+                                    img.renderedWidth &&
+                                    img.naturalWidth < img.renderedWidth && (
+                                      <span className="text-[8px] font-bold text-orange-600 bg-orange-50 px-1 py-0.5 rounded uppercase tracking-tighter border border-orange-100/50">
+                                        Upscaled
+                                      </span>
+                                    )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-1.5 overflow-hidden">
-                          <span className="text-[12px] font-bold text-slate-500 shrink-0 uppercase tracking-tight">
-                            ALT:
-                          </span>
-                          <span
-                            className={`text-[13px] font-semibold truncate ${
-                              img.alt ? "text-slate-800" : "text-red-600 italic"
-                            }`}
-                          >
-                            {img.alt || "Missing alternative text"}
-                          </span>
-                        </div>
-                        {img.width && img.height && (
-                          <span className="text-[11px] text-slate-500 font-mono font-medium shrink-0">
-                            {img.width}×{img.height}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-slate-500 truncate font-medium">
-                        {img.src}
-                      </div>
-                    </div>
+                  );
+                })}
+                {filteredImages.length === 0 && (
+                  <div className="py-20 text-center bg-white">
+                    <p className="text-slate-400 text-[13px] font-medium">
+                      {searchQuery
+                        ? `No matches for "${searchQuery}"`
+                        : `No content to display.`}
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
-            </section>
+            </div>
           </div>
         );
 
@@ -450,7 +678,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({ report }) => {
               <button
                 key={Tab.id}
                 onClick={() => setActiveTab(Tab.id)}
-                className={`flex flex-wrap justify-center items-center flex-1 py-2.5 px-1 transition-all border-b-2 gap-2 ${
+                className={`flex flex-col justify-center items-center flex-1 py-2.5 px-1 transition-all border-b-2 gap-1 ${
                   isActive
                     ? "border-indigo-600 text-indigo-600"
                     : "border-transparent text-slate-500 hover:text-slate-700"
