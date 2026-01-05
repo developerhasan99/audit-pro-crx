@@ -50,36 +50,146 @@ export const SEOAudit: React.FC = () => {
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: (imageSrc: string, imageAlt?: string) => {
-          // Find the locate function on the page or define it
-          const images = Array.from(document.querySelectorAll("img"));
-          const target =
-            images.find(
-              (img) =>
-                img.src === imageSrc && (!imageAlt || img.alt === imageAlt)
-            ) || images.find((img) => img.src === imageSrc);
+          const findImage = () => {
+            const imgs = Array.from(document.querySelectorAll("img"));
+
+            // 1. Exact match on currentSrc or src + alt
+            let found = imgs.find(
+              (i) =>
+                (i.currentSrc === imageSrc || i.src === imageSrc) &&
+                (!imageAlt || i.alt === imageAlt)
+            );
+            if (found) return found;
+
+            // 2. Responsive match
+            found = imgs.find((i) => i.currentSrc === imageSrc);
+            if (found) return found;
+
+            // 3. Absolute path match
+            try {
+              const targetPath = new URL(imageSrc).pathname;
+              found = imgs.find((i) => {
+                try {
+                  return new URL(i.src).pathname === targetPath;
+                } catch {
+                  return false;
+                }
+              });
+              if (found) return found;
+            } catch {}
+
+            return imgs.find((i) => i.src === imageSrc);
+          };
+
+          const target = findImage();
 
           if (target) {
+            console.log("[Audit Pro] Spotlighting image:", target);
             target.scrollIntoView({ behavior: "smooth", block: "center" });
 
-            const originalTransition = target.style.transition;
-            const originalOutline = target.style.outline;
-            const originalOutlineOffset = target.style.outlineOffset;
-            const originalZIndex = target.style.zIndex;
+            // Cleanup any existing locator
+            const cleanup = () => {
+              const el = document.getElementById("seo-audit-spotlight-root");
+              if (el) el.remove();
+            };
+            cleanup();
 
-            target.style.transition = "all 0.3s ease";
-            target.style.outline = "4px solid #4f46e5";
-            target.style.outlineOffset = "4px";
-            target.style.zIndex = "9999999";
+            const root = document.createElement("div");
+            root.id = "seo-audit-spotlight-root";
+            Object.assign(root.style, {
+              position: "fixed",
+              top: "0",
+              left: "0",
+              width: "100vw",
+              height: "100vh",
+              zIndex: "2147483647",
+              pointerEvents: "none",
+              transition: "opacity 0.5s ease",
+              opacity: "0",
+            });
+
+            const backdrop = document.createElement("div");
+            Object.assign(backdrop.style, {
+              position: "absolute",
+              top: "0",
+              left: "0",
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+            });
+
+            const createPulse = (delay: number) => {
+              const p = document.createElement("div");
+              Object.assign(p.style, {
+                position: "absolute",
+                border: "4px solid #4f46e5",
+                borderRadius: "50%",
+                pointerEvents: "none",
+                opacity: "0",
+                transform: "translate(-50%, -50%) scale(0.1)",
+              });
+
+              const style = document.createElement("style");
+              const animName = `seo-pulse-${delay.toString().replace(".", "")}`;
+              style.textContent = `
+                @keyframes ${animName} {
+                  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; }
+                  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+                }
+              `;
+              document.head.appendChild(style);
+              p.style.animation = `${animName} 1.5s infinite ${delay}s linear`;
+              return { p, style };
+            };
+
+            const pulse1 = createPulse(0);
+            const pulse2 = createPulse(0.5);
+            const pulse3 = createPulse(1.0);
+
+            root.appendChild(backdrop);
+            root.appendChild(pulse1.p);
+            root.appendChild(pulse2.p);
+            root.appendChild(pulse3.p);
+            document.body.appendChild(root);
+
+            const updateSpotlight = () => {
+              const rect = target.getBoundingClientRect();
+              const cx = rect.left + rect.width / 2;
+              const cy = rect.top + rect.height / 2;
+              const radius = Math.max(rect.width, rect.height) / 1.5 + 20;
+
+              backdrop.style.background = `radial-gradient(circle ${radius}px at ${cx}px ${cy}px, transparent 100%, rgba(0,0,0,0.7) 100%)`;
+
+              [pulse1.p, pulse2.p, pulse3.p].forEach((p) => {
+                p.style.top = `${cy}px`;
+                p.style.left = `${cx}px`;
+                p.style.width = `${radius * 2}px`;
+                p.style.height = `${radius * 2}px`;
+              });
+            };
+
+            let active = true;
+            const sync = () => {
+              if (!active) return;
+              updateSpotlight();
+              requestAnimationFrame(sync);
+            };
+            requestAnimationFrame(sync);
+
+            requestAnimationFrame(() => (root.style.opacity = "1"));
 
             setTimeout(() => {
-              target.style.outline = "20px solid transparent";
+              active = false;
+              root.style.opacity = "0";
               setTimeout(() => {
-                target.style.transition = originalTransition;
-                target.style.outline = originalOutline;
-                target.style.outlineOffset = originalOutlineOffset;
-                target.style.zIndex = originalZIndex;
-              }, 300);
-            }, 2000);
+                root.remove();
+                [pulse1.style, pulse2.style, pulse3.style].forEach((s) =>
+                  s.remove()
+                );
+              }, 500);
+            }, 2500);
+          } else {
+            console.warn("[Audit Pro] Image not found:", imageSrc);
           }
         },
         args: [src, alt],

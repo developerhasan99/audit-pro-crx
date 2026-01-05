@@ -168,11 +168,10 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         );
 
       case "Images":
-        const missingAltImages = report.raw.images.filter((img) => !img.alt);
         const filteredImages = report.raw.images.filter((img) => {
           const matchesFilter =
             imageFilter === "all" ||
-            (imageFilter === "missing-alt" && !img.alt);
+            (imageFilter === "missing-alt" && img.type === "img" && !img.alt);
           const matchesSearch =
             !searchQuery ||
             img.alt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -253,7 +252,13 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                         : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    Missing Alt ({missingAltImages.length})
+                    Missing Alt (
+                    {
+                      report.raw.images.filter(
+                        (i) => i.type === "img" && !i.alt
+                      ).length
+                    }
+                    )
                   </button>
                 </div>
 
@@ -303,8 +308,16 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                                   : "text-red-500 italic font-normal"
                               }`}
                             >
-                              {img.alt || "Missing alternative text"}
+                              {img.alt ||
+                                (img.type === "bg"
+                                  ? "Background Image"
+                                  : "Missing alternative text")}
                             </span>
+                            {img.type === "bg" && (
+                              <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-slate-200/50">
+                                Background
+                              </span>
+                            )}
                           </div>
                           <div className="text-[11px] text-slate-400 truncate font-normal">
                             {img.src}
@@ -346,15 +359,17 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                                 >
                                   <ExternalLink size={14} />
                                 </a>
-                                <button
-                                  onClick={() =>
-                                    onLocateImage?.(img.src, img.alt)
-                                  }
-                                  className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
-                                  title="Locate on Page"
-                                >
-                                  <MapPin size={14} />
-                                </button>
+                                {img.type !== "bg" && img.isVisible && (
+                                  <button
+                                    onClick={() =>
+                                      onLocateImage?.(img.src, img.alt)
+                                    }
+                                    className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
+                                    title="Locate on Page"
+                                  >
+                                    <MapPin size={14} />
+                                  </button>
+                                )}
                               </div>
                             </div>
 

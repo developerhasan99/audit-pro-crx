@@ -110,7 +110,7 @@ export const evaluateAudit = (data: any): AuditReport => {
   }
 
   const imagesMissingAlt = data.images.filter(
-    (img: any) => !img.alt && img.isVisible
+    (img: any) => img.type === "img" && !img.alt && img.isVisible
   );
   if (imagesMissingAlt.length > 0) {
     content.push({
@@ -176,7 +176,6 @@ export const evaluateAudit = (data: any): AuditReport => {
   });
 
   // Calculate generic score
-  const totalWeight = 100;
   let deductions = 0;
   issues.concat(...Object.values(report)).forEach((issue) => {
     if (issue.severity === "Critical") deductions += 20;

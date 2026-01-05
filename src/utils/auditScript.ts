@@ -19,25 +19,75 @@ export const runPageAudit = () => {
   };
 
   const getImages = () => {
-    const imgs = Array.from(document.querySelectorAll("img"));
-    return imgs.map((img) => {
-      // Try to get file size from performance entries
+    const images: any[] = [];
+
+    // 1. Regular <img> tags
+    document.querySelectorAll("img").forEach((img) => {
+      const src = img.src || img.getAttribute("src");
+      if (!src || src.startsWith("data:") || src === "about:blank") return;
+
       const perfEntry = performance.getEntriesByName(
         img.src
       )[0] as PerformanceResourceTiming;
-      const fileSize = perfEntry ? perfEntry.encodedBodySize : undefined;
+      const rect = img.getBoundingClientRect();
 
-      return {
+      images.push({
         src: img.src,
         alt: img.alt,
+        type: "img",
         naturalWidth: img.naturalWidth,
         naturalHeight: img.naturalHeight,
-        renderedWidth: img.width,
-        renderedHeight: img.height,
-        fileSize: fileSize,
-        isVisible: img.offsetParent !== null,
-      };
+        renderedWidth: Math.round(rect.width),
+        renderedHeight: Math.round(rect.height),
+        fileSize: perfEntry ? perfEntry.encodedBodySize : undefined,
+        isVisible:
+          img.offsetParent !== null &&
+          rect.width > 0 &&
+          rect.height > 0 &&
+          window.getComputedStyle(img).display !== "none" &&
+          window.getComputedStyle(img).visibility !== "hidden",
+      });
     });
+
+    // 2. Background images
+    const allElements = document.querySelectorAll("*");
+    allElements.forEach((el) => {
+      const style = window.getComputedStyle(el);
+      const bgImage = style.backgroundImage;
+
+      if (bgImage && bgImage !== "none" && bgImage.startsWith("url(")) {
+        const urlMatch = bgImage.match(/url\(["']?([^"']+)["']?\)/);
+        if (urlMatch && urlMatch[1]) {
+          const src = urlMatch[1];
+          if (!src || src.startsWith("data:") || src === "about:blank") return;
+
+          const rect = el.getBoundingClientRect();
+          const perfEntry = performance.getEntriesByName(
+            src
+          )[0] as PerformanceResourceTiming;
+
+          images.push({
+            src: src.startsWith("http")
+              ? src
+              : new URL(src, window.location.href).href,
+            alt: "",
+            type: "bg",
+            naturalWidth: 0,
+            naturalHeight: 0,
+            renderedWidth: Math.round(rect.width),
+            renderedHeight: Math.round(rect.height),
+            fileSize: perfEntry ? perfEntry.encodedBodySize : undefined,
+            isVisible:
+              rect.width > 0 &&
+              rect.height > 0 &&
+              style.display !== "none" &&
+              style.visibility !== "hidden",
+          });
+        }
+      }
+    });
+
+    return images;
   };
 
   const getLinks = () => {
