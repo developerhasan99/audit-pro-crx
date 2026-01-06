@@ -52,6 +52,9 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
   const [activeTab, setActiveTab] = useState("Overview");
   const [expandedLinkId, setExpandedLinkId] = useState<number | null>(null);
   const [expandedImageId, setExpandedImageId] = useState<number | null>(null);
+  const [expandedHeadingId, setExpandedHeadingId] = useState<number | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [linkFilter, setLinkFilter] = useState<"all" | "internal" | "external">(
     "all"
@@ -122,7 +125,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
           .flat()
           .filter((i) => i.severity !== "Success");
         return (
-          <div className="px-4 animate-in fade-in duration-300">
+          <div className="px-4 animate-in fade-in duration-300 pt-4">
             <h3 className="text-[14px] font-bold text-slate-600 uppercase tracking-widest mb-5">
               Action Required
             </h3>
@@ -227,7 +230,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         return (
           <div className="animate-in fade-in duration-300">
             {/* Header / Stats Bar */}
-            <div className="flex items-center justify-between px-4 pb-4">
+            <div className="flex items-center justify-between px-4 pt-4 pb-4">
               <div className="flex-1 min-w-0">
                 <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
                   Content Analysis
@@ -245,17 +248,17 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
               </div>
               <button
                 onClick={handleExportContentCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all active:scale-[0.98]"
               >
                 <Download size={13} strokeWidth={2.5} />
-                Export
+                Export CSV
               </button>
             </div>
 
-            <div className="space-y-6 px-4 pb-8">
+            <div className="space-y-6 pb-8">
               {/* Content Score Dashboard */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+              <div className="px-4 grid grid-cols-2 gap-3">
+                <div className="col-span-2 bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <PieChart size={16} className="text-indigo-500" />
@@ -283,7 +286,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                   </p>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <div className="bg-white border border-slate-200 rounded-2xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlignLeft size={14} className="text-blue-500" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -310,7 +313,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <div className="bg-white border border-slate-200 rounded-2xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <MousePointer2 size={14} className="text-emerald-500" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -342,81 +345,121 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
 
               {/* Keyword Analysis */}
               {report.raw.keywords && report.raw.keywords.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
-                    <Type size={14} className="text-indigo-500" />
-                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                      Top Keywords Found
-                    </span>
-                  </div>
-                  <div className="p-4 flex flex-wrap gap-2">
-                    {report.raw.keywords.map((k: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg group hover:border-indigo-200 transition-colors"
-                      >
-                        <span className="text-[13px] font-bold text-slate-700">
-                          {k.word}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-100 group-hover:text-indigo-500 transition-colors">
-                          {k.count}
-                        </span>
-                      </div>
-                    ))}
+                <div className="px-4">
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                    <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+                      <Type size={14} className="text-indigo-500" />
+                      <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        Top Keywords Found
+                      </span>
+                    </div>
+                    <div className="p-4 flex flex-wrap gap-2">
+                      {report.raw.keywords.map((k: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg group hover:border-indigo-200 transition-colors"
+                        >
+                          <span className="text-[13px] font-bold text-slate-700">
+                            {k.word}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-100 group-hover:text-indigo-500 transition-colors">
+                            {k.count}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Headings Section */}
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Layout size={14} className="text-indigo-500" />
-                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                      Headings Structure
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <Search
-                      size={12}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search headings..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-white border border-slate-200 pl-7 pr-2 py-1 text-[10px] font-medium rounded-md w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
-                    />
-                  </div>
-                </div>
-                <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
-                  {filteredHeadings.map((h: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 p-3.5 hover:bg-slate-50 transition-colors"
-                    >
-                      <span
-                        className={`text-[10px] font-black w-8 h-5 flex items-center justify-center shrink-0 rounded ${
-                          h.tag === "H1"
-                            ? "bg-indigo-600 text-white"
-                            : h.tag === "H2"
-                            ? "bg-indigo-100 text-indigo-700"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {h.tag}
-                      </span>
-                      <span className="text-[13px] text-slate-700 font-medium leading-tight">
-                        {h.text}
+              <div className="px-4">
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                  <div className="sticky top-0 z-20 px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Layout size={14} className="text-indigo-500" />
+                      <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        Headings Structure
                       </span>
                     </div>
-                  ))}
-                  {filteredHeadings.length === 0 && (
-                    <div className="p-8 text-center text-slate-400 text-xs italic">
-                      No headings found.
+                    <div className="relative">
+                      <Search
+                        size={12}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search headings..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-white border border-slate-200 pl-7 pr-2 py-1 text-[10px] font-medium rounded-md w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all font-sans"
+                      />
                     </div>
-                  )}
+                  </div>
+                  <div className="divide-y divide-slate-50">
+                    {filteredHeadings.map((h: any, idx: number) => {
+                      const level = parseInt(h.tag.substring(1));
+                      const isExpanded = expandedHeadingId === idx;
+                      const indentation = level > 1 ? (level - 1) * 16 : 0;
+
+                      return (
+                        <div key={idx} className="flex flex-col">
+                          <button
+                            onClick={() =>
+                              setExpandedHeadingId(isExpanded ? null : idx)
+                            }
+                            className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50/80 transition-colors text-left group"
+                            style={{ paddingLeft: `${16 + indentation}px` }}
+                          >
+                            <span
+                              className={`text-[9px] font-black w-7 h-4 flex items-center justify-center shrink-0 rounded ${
+                                h.tag === "H1"
+                                  ? "bg-indigo-600 text-white"
+                                  : h.tag === "H2"
+                                  ? "bg-indigo-100 text-indigo-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {h.tag}
+                            </span>
+                            <span className="text-[13px] text-slate-700 font-semibold leading-tight flex-1 truncate">
+                              {h.text}
+                            </span>
+                            <ChevronDown
+                              size={14}
+                              className={`text-slate-300 transition-transform duration-200 ${
+                                isExpanded
+                                  ? "rotate-180 text-indigo-500"
+                                  : "group-hover:text-slate-400"
+                              }`}
+                            />
+                          </button>
+                          {isExpanded && (
+                            <div
+                              className="bg-slate-50/30 animate-in slide-in-from-top-1 duration-200 pb-4 pr-4"
+                              style={{
+                                paddingLeft: `${16 + indentation + 28 + 12}px`,
+                              }}
+                            >
+                              <div className="p-3 bg-white border border-slate-100 rounded-lg">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                  Full Content
+                                </div>
+                                <div className="text-[12px] text-slate-600 font-medium leading-relaxed italic">
+                                  "{h.text}"
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {filteredHeadings.length === 0 && (
+                      <div className="py-20 text-center text-slate-400 text-sm font-medium">
+                        No headings found matching your search.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -469,7 +512,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         };
 
         return (
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in duration-300 pt-4">
             <div className="flex items-center justify-between px-4 pb-4">
               <div className="flex-1 min-w-0">
                 <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
@@ -481,219 +524,223 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
               </div>
               <button
                 onClick={handleExportImagesCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all active:scale-[0.98]"
               >
                 <Download size={13} strokeWidth={2.5} />
                 Export CSV
               </button>
             </div>
-            <div className="bg-white border-y border-slate-100">
-              <div className="p-2.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
-                <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setImageFilter("all")}
-                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
-                      imageFilter === "all"
-                        ? "bg-slate-800 text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    All ({report.raw.images.length})
-                  </button>
-                  <button
-                    onClick={() => setImageFilter("missing-alt")}
-                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all border-l border-slate-100 ${
-                      imageFilter === "missing-alt"
-                        ? "bg-slate-800 text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    Missing Alt (
-                    {
-                      report.raw.images.filter(
-                        (i: any) => i.type === "img" && !i.alt
-                      ).length
-                    }
-                    )
-                  </button>
+            <div className="px-4">
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <div className="sticky top-0 z-20 p-2.5 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setImageFilter("all")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
+                        imageFilter === "all"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      All ({report.raw.images.length})
+                    </button>
+                    <button
+                      onClick={() => setImageFilter("missing-alt")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all border-l border-slate-100 ${
+                        imageFilter === "missing-alt"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      Missing Alt (
+                      {
+                        report.raw.images.filter(
+                          (i: any) => i.type === "img" && !i.alt
+                        ).length
+                      }
+                      )
+                    </button>
+                  </div>
+
+                  <div className="relative flex-1 max-w-[150px]">
+                    <Search
+                      size={12}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search images..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 rounded-md transition-all"
+                    />
+                  </div>
                 </div>
 
-                <div className="relative flex-1 max-w-[150px]">
-                  <Search
-                    size={12}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search images..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 rounded-md transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="divide-y divide-slate-50 max-h-[550px] overflow-y-auto">
-                {filteredImages.map((img: any, idx: number) => {
-                  const isExpanded = expandedImageId === idx;
-                  return (
-                    <div key={idx} className="flex flex-col">
-                      <button
-                        onClick={() =>
-                          setExpandedImageId(isExpanded ? null : idx)
-                        }
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left group"
-                      >
-                        <div className="w-10 h-10 bg-slate-100 shrink-0 overflow-hidden flex items-center justify-center border border-slate-100 rounded-lg">
-                          {img.src ? (
-                            <img
-                              src={img.src}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <ImageIcon size={20} className="text-slate-500" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {img.type === "bg" ? (
-                            <div className="inline-block mb-1 text-xs font-bold text-slate-400 bg-slate-100 px-1.5 rounded uppercase tracking-tighter border border-slate-200/50">
-                              Background Image
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span
-                                className={`text-[14px] font-semibold truncate group-hover:text-indigo-600 transition-colors ${
-                                  img.alt
-                                    ? "text-slate-800"
-                                    : "text-red-500 italic font-normal"
-                                }`}
-                              >
-                                {img.alt || "Missing alternative text"}
-                              </span>
-                            </div>
-                          )}
-                          <div className="text-[11px] text-slate-400 truncate font-normal">
-                            {img.src}
-                          </div>
-                        </div>
-                        <div
-                          className={`transition-transform duration-200 ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
+                <div className="divide-y divide-slate-50">
+                  {filteredImages.map((img: any, idx: number) => {
+                    const isExpanded = expandedImageId === idx;
+                    return (
+                      <div key={idx} className="flex flex-col">
+                        <button
+                          onClick={() =>
+                            setExpandedImageId(isExpanded ? null : idx)
+                          }
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left group"
                         >
-                          <ChevronDown
-                            size={16}
-                            className={`${
-                              isExpanded
-                                ? "text-indigo-500"
-                                : "text-slate-300 group-hover:text-slate-400"
-                            }`}
-                          />
-                        </div>
-                      </button>
-
-                      {isExpanded && (
-                        <div className="bg-slate-50/50 p-4 border-t border-slate-50 space-y-4 animate-in slide-in-from-top-1 duration-200">
-                          <div className="grid gap-4">
-                            <div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                Image Source URL
+                          <div className="w-10 h-10 bg-slate-100 shrink-0 overflow-hidden flex items-center justify-center border border-slate-100 rounded-lg">
+                            {img.src ? (
+                              <img
+                                src={img.src}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <ImageIcon size={20} className="text-slate-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {img.type === "bg" ? (
+                              <div className="inline-block mb-1 text-xs font-bold text-slate-400 bg-slate-100 px-1.5 rounded uppercase tracking-tighter border border-slate-200/50">
+                                Background Image
                               </div>
-                              <div className="flex items-start gap-2">
-                                <div className="text-[12px] text-slate-600 break-all bg-white border border-slate-100 p-2.5 flex-1 rounded-md font-medium leading-relaxed">
-                                  {img.src}
-                                </div>
-                                <a
-                                  href={img.src}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
-                                  title="Open in New Tab"
-                                >
-                                  <ExternalLink size={14} />
-                                </a>
-                                {img.type !== "bg" && img.isVisible && (
-                                  <button
-                                    onClick={() =>
-                                      onLocateImage?.(img.src, img.alt)
-                                    }
-                                    className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
-                                    title="Locate on Page"
-                                  >
-                                    <MapPin size={14} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                  Alt Text
-                                </div>
-                                <div
-                                  className={`text-[12px] font-medium bg-white border border-slate-100 p-2.5 rounded-md ${
-                                    img.alt ? "text-slate-600" : "text-red-500"
+                            ) : (
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span
+                                  className={`text-[14px] font-semibold truncate group-hover:text-indigo-600 transition-colors ${
+                                    img.alt
+                                      ? "text-slate-800"
+                                      : "text-red-500 italic font-normal"
                                   }`}
                                 >
-                                  {img.alt || "None"}
-                                </div>
+                                  {img.alt || "Missing alternative text"}
+                                </span>
                               </div>
-                              <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                  File Size
-                                </div>
-                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
-                                  {formatFileSize(img.fileSize)}
-                                </div>
-                              </div>
+                            )}
+                            <div className="text-[11px] text-slate-400 truncate font-normal">
+                              {img.src}
                             </div>
+                          </div>
+                          <div
+                            className={`transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          >
+                            <ChevronDown
+                              size={16}
+                              className={`${
+                                isExpanded
+                                  ? "text-indigo-500"
+                                  : "text-slate-300 group-hover:text-slate-400"
+                              }`}
+                            />
+                          </div>
+                        </button>
 
-                            <div className="grid grid-cols-2 gap-4">
+                        {isExpanded && (
+                          <div className="bg-slate-50/50 p-4 border-t border-slate-50 space-y-4 animate-in slide-in-from-top-1 duration-200">
+                            <div className="grid gap-4">
                               <div>
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                  Natural Resolution
+                                  Image Source URL
                                 </div>
-                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
-                                  {img.naturalWidth && img.naturalHeight
-                                    ? `${img.naturalWidth} × ${img.naturalHeight} px`
-                                    : "Unknown"}
+                                <div className="flex items-start gap-2">
+                                  <div className="text-[12px] text-slate-600 break-all bg-white border border-slate-100 p-2.5 flex-1 rounded-md font-medium leading-relaxed">
+                                    {img.src}
+                                  </div>
+                                  <a
+                                    href={img.src}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
+                                    title="Open in New Tab"
+                                  >
+                                    <ExternalLink size={14} />
+                                  </a>
+                                  {img.type !== "bg" && img.isVisible && (
+                                    <button
+                                      onClick={() =>
+                                        onLocateImage?.(img.src, img.alt)
+                                      }
+                                      className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
+                                      title="Locate on Page"
+                                    >
+                                      <MapPin size={14} />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
-                              <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                  Rendered Resolution
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Alt Text
+                                  </div>
+                                  <div
+                                    className={`text-[12px] font-medium bg-white border border-slate-100 p-2.5 rounded-md ${
+                                      img.alt
+                                        ? "text-slate-600"
+                                        : "text-red-500"
+                                    }`}
+                                  >
+                                    {img.alt || "None"}
+                                  </div>
                                 </div>
-                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md flex items-center gap-2">
-                                  {img.renderedWidth && img.renderedHeight
-                                    ? `${img.renderedWidth} × ${img.renderedHeight} px`
-                                    : "Unknown"}
-                                  {img.naturalWidth &&
-                                    img.renderedWidth &&
-                                    img.naturalWidth < img.renderedWidth && (
-                                      <span className="text-[8px] font-bold text-orange-600 bg-orange-50 px-1 py-0.5 rounded uppercase tracking-tighter border border-orange-100/50">
-                                        Upscaled
-                                      </span>
-                                    )}
+                                <div>
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    File Size
+                                  </div>
+                                  <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
+                                    {formatFileSize(img.fileSize)}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Natural Resolution
+                                  </div>
+                                  <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
+                                    {img.naturalWidth && img.naturalHeight
+                                      ? `${img.naturalWidth} × ${img.naturalHeight} px`
+                                      : "Unknown"}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Rendered Resolution
+                                  </div>
+                                  <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md flex items-center gap-2">
+                                    {img.renderedWidth && img.renderedHeight
+                                      ? `${img.renderedWidth} × ${img.renderedHeight} px`
+                                      : "Unknown"}
+                                    {img.naturalWidth &&
+                                      img.renderedWidth &&
+                                      img.naturalWidth < img.renderedWidth && (
+                                        <span className="text-[8px] font-bold text-orange-600 bg-orange-50 px-1 py-0.5 rounded uppercase tracking-tighter border border-orange-100/50">
+                                          Upscaled
+                                        </span>
+                                      )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                    );
+                  })}
+                  {filteredImages.length === 0 && (
+                    <div className="py-20 text-center bg-white rounded-b-2xl">
+                      <p className="text-slate-400 text-[13px] font-medium">
+                        {searchQuery
+                          ? `No matches for "${searchQuery}"`
+                          : `No content to display.`}
+                      </p>
                     </div>
-                  );
-                })}
-                {filteredImages.length === 0 && (
-                  <div className="py-20 text-center bg-white">
-                    <p className="text-slate-400 text-[13px] font-medium">
-                      {searchQuery
-                        ? `No matches for "${searchQuery}"`
-                        : `No content to display.`}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -745,7 +792,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         };
 
         return (
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in duration-300 pt-4">
             <div className="flex items-center justify-between px-4 pb-4">
               <div className="flex-1 min-w-0">
                 <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
@@ -757,175 +804,177 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
               </div>
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all active:scale-[0.98]"
               >
                 <Download size={13} strokeWidth={2.5} />
                 Export CSV
               </button>
             </div>
-            <div className="bg-white border-y border-slate-100">
-              <div className="p-2.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
-                <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setLinkFilter("all")}
-                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
-                      linkFilter === "all"
-                        ? "bg-slate-800 text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    All ({report.raw.links.length})
-                  </button>
-                  <button
-                    onClick={() => setLinkFilter("internal")}
-                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all border-x border-slate-100 ${
-                      linkFilter === "internal"
-                        ? "bg-slate-800 text-white shadow-sm border-transparent"
-                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    Int ({internalLinks.length})
-                  </button>
-                  <button
-                    onClick={() => setLinkFilter("external")}
-                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
-                      linkFilter === "external"
-                        ? "bg-slate-800 text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    Ext ({externalLinks.length})
-                  </button>
+            <div className="px-4">
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <div className="sticky top-0 z-20 p-2.5 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setLinkFilter("all")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
+                        linkFilter === "all"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      All ({report.raw.links.length})
+                    </button>
+                    <button
+                      onClick={() => setLinkFilter("internal")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all border-x border-slate-100 ${
+                        linkFilter === "internal"
+                          ? "bg-slate-800 text-white border-transparent"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      Int ({internalLinks.length})
+                    </button>
+                    <button
+                      onClick={() => setLinkFilter("external")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight transition-all ${
+                        linkFilter === "external"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      Ext ({externalLinks.length})
+                    </button>
+                  </div>
+
+                  <div className="relative flex-1 max-w-[150px]">
+                    <Search
+                      size={12}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search links..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 rounded-md transition-all"
+                    />
+                  </div>
                 </div>
 
-                <div className="relative flex-1 max-w-[150px]">
-                  <Search
-                    size={12}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search links..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 rounded-md transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="divide-y divide-slate-50 max-h-[550px] overflow-y-auto">
-                {filteredLinks.map((link: any, idx: number) => {
-                  const isExpanded = expandedLinkId === idx;
-                  return (
-                    <div key={idx} className="flex flex-col">
-                      <button
-                        onClick={() =>
-                          setExpandedLinkId(isExpanded ? null : idx)
-                        }
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left group"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[14px] font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
-                              {link.text || (
-                                <span className="text-slate-400 italic font-normal">
-                                  No anchor text
+                <div className="divide-y divide-slate-50">
+                  {filteredLinks.map((link: any, idx: number) => {
+                    const isExpanded = expandedLinkId === idx;
+                    return (
+                      <div key={idx} className="flex flex-col">
+                        <button
+                          onClick={() =>
+                            setExpandedLinkId(isExpanded ? null : idx)
+                          }
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left group"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[14px] font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                                {link.text || (
+                                  <span className="text-slate-400 italic font-normal">
+                                    No anchor text
+                                  </span>
+                                )}
+                              </span>
+                              {link.isInternal ? (
+                                <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                  Internal
+                                </span>
+                              ) : (
+                                <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-amber-100/50">
+                                  External
                                 </span>
                               )}
-                            </span>
-                            {link.isInternal ? (
-                              <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                                Internal
-                              </span>
-                            ) : (
-                              <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-amber-100/50">
-                                External
-                              </span>
-                            )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate font-normal">
+                              {link.href}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-slate-400 truncate font-normal">
-                            {link.href}
-                          </div>
-                        </div>
-                        <div
-                          className={`transition-transform duration-200 ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
-                        >
-                          <ChevronDown
-                            size={16}
-                            className={`${
-                              isExpanded
-                                ? "text-indigo-500"
-                                : "text-slate-300 group-hover:text-slate-400"
+                          <div
+                            className={`transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
                             }`}
-                          />
-                        </div>
-                      </button>
+                          >
+                            <ChevronDown
+                              size={16}
+                              className={`${
+                                isExpanded
+                                  ? "text-indigo-500"
+                                  : "text-slate-300 group-hover:text-slate-400"
+                              }`}
+                            />
+                          </div>
+                        </button>
 
-                      {isExpanded && (
-                        <div className="bg-slate-50/50 p-4 border-t border-slate-50 space-y-4 animate-in slide-in-from-top-1 duration-200">
-                          <div className="grid gap-4">
-                            <div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                Destination URL
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <div className="text-[12px] text-slate-600 break-all bg-white border border-slate-100 p-2.5 flex-1 rounded-md font-medium leading-relaxed">
-                                  {link.href}
-                                </div>
-                                <a
-                                  href={link.href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
-                                >
-                                  <ExternalLink size={14} />
-                                </a>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                        {isExpanded && (
+                          <div className="bg-slate-50/50 p-4 border-t border-slate-50 space-y-4 animate-in slide-in-from-top-1 duration-200">
+                            <div className="grid gap-4">
                               <div>
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                  Rel Attribute
+                                  Destination URL
                                 </div>
-                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
-                                  {link.rel || (
-                                    <span className="text-slate-300 italic font-normal">
-                                      none
-                                    </span>
-                                  )}
+                                <div className="flex items-start gap-2">
+                                  <div className="text-[12px] text-slate-600 break-all bg-white border border-slate-100 p-2.5 flex-1 rounded-md font-medium leading-relaxed">
+                                    {link.href}
+                                  </div>
+                                  <a
+                                    href={link.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all rounded-md shadow-sm"
+                                  >
+                                    <ExternalLink size={14} />
+                                  </a>
                                 </div>
                               </div>
-                              <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                  Target
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Rel Attribute
+                                  </div>
+                                  <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
+                                    {link.rel || (
+                                      <span className="text-slate-300 italic font-normal">
+                                        none
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
-                                  {link.target || (
-                                    <span className="text-slate-300 italic font-normal">
-                                      _self
-                                    </span>
-                                  )}
+                                <div>
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Target
+                                  </div>
+                                  <div className="text-[12px] font-medium text-slate-600 bg-white border border-slate-100 p-2.5 truncate rounded-md">
+                                    {link.target || (
+                                      <span className="text-slate-300 italic font-normal">
+                                        _self
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                    );
+                  })}
+                  {filteredLinks.length === 0 && (
+                    <div className="py-20 text-center bg-white rounded-b-2xl">
+                      <p className="text-slate-400 text-[13px] font-medium">
+                        {searchQuery
+                          ? `No matches for "${searchQuery}"`
+                          : `No content to display.`}
+                      </p>
                     </div>
-                  );
-                })}
-                {filteredLinks.length === 0 && (
-                  <div className="py-20 text-center bg-white">
-                    <p className="text-slate-400 text-[13px] font-medium">
-                      {searchQuery
-                        ? `No matches for "${searchQuery}"`
-                        : `No content to display.`}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -963,7 +1012,9 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         </div>
       </nav>
 
-      <main className="py-4 min-h-0 overflow-y-auto">{renderTabContent()}</main>
+      <main className="pb-4 min-h-0 overflow-y-auto h-full scroll-smooth">
+        {renderTabContent()}
+      </main>
     </div>
   );
 };
