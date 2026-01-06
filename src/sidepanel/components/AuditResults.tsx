@@ -228,9 +228,9 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         };
 
         return (
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in duration-300 pt-4">
             {/* Header / Stats Bar */}
-            <div className="flex items-center justify-between px-4 pt-4 pb-4">
+            <div className="flex items-center justify-between px-4 pb-4">
               <div className="flex-1 min-w-0">
                 <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
                   Content Analysis
@@ -518,9 +518,11 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                 <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
                   Image Inventory
                 </h3>
-                <p className="text-[11px] font-medium text-slate-500">
-                  {report.raw.images.length} Discovered Images on Page
-                </p>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                    {report.raw.images.length} Discovered Images on Page
+                  </span>
+                </div>
               </div>
               <button
                 onClick={handleExportImagesCSV}
@@ -798,9 +800,11 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                 <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
                   Link Inventory
                 </h3>
-                <p className="text-[11px] font-medium text-slate-500">
-                  {report.raw.links.length} Discovered URLs on Page
-                </p>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                    {report.raw.links.length} Discovered URLs on Page
+                  </span>
+                </div>
               </div>
               <button
                 onClick={handleExportCSV}
