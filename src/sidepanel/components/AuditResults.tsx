@@ -300,25 +300,23 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span
-                              className={`text-[14px] font-semibold truncate group-hover:text-indigo-600 transition-colors ${
-                                img.alt
-                                  ? "text-slate-800"
-                                  : "text-red-500 italic font-normal"
-                              }`}
-                            >
-                              {img.alt ||
-                                (img.type === "bg"
-                                  ? "Background Image"
-                                  : "Missing alternative text")}
-                            </span>
-                            {img.type === "bg" && (
-                              <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-slate-200/50">
-                                Background
+                          {img.type === "bg" ? (
+                            <div className="inline-block mb-1 text-xs font-bold text-slate-400 bg-slate-100 px-1.5 rounded uppercase tracking-tighter border border-slate-200/50">
+                              Background Image
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span
+                                className={`text-[14px] font-semibold truncate group-hover:text-indigo-600 transition-colors ${
+                                  img.alt
+                                    ? "text-slate-800"
+                                    : "text-red-500 italic font-normal"
+                                }`}
+                              >
+                                {img.alt || "Missing alternative text"}
                               </span>
-                            )}
-                          </div>
+                            </div>
+                          )}
                           <div className="text-[11px] text-slate-400 truncate font-normal">
                             {img.src}
                           </div>
