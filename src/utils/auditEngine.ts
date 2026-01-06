@@ -14,11 +14,7 @@ export interface AuditReport {
   categories: {
     [key: string]: AuditIssue[];
   };
-  raw: {
-    links: any[];
-    headings: any[];
-    images: any[];
-  };
+  raw: any;
 }
 
 export const evaluateAudit = (data: any): AuditReport => {
@@ -188,6 +184,7 @@ export const evaluateAudit = (data: any): AuditReport => {
     score: Math.max(0, 100 - deductions),
     categories: report,
     raw: {
+      ...data,
       links: data.links || [],
       headings: data.headings || [],
       images: data.images || [],

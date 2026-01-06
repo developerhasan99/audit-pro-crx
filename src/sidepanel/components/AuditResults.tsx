@@ -15,6 +15,13 @@ import {
   Search,
   Download,
   MapPin,
+  Hash,
+  Clock,
+  Layout,
+  Type,
+  AlignLeft,
+  MousePointer2,
+  PieChart,
 } from "lucide-react";
 
 interface AuditResultsProps {
@@ -137,38 +144,287 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         );
 
       case "Content":
+        const wordCount = report.raw.wordCount || 0;
+        const sentenceCount = report.raw.sentenceCount || 0;
+        const paragraphCount = report.raw.paragraphCount || 0;
+        const readingEase = report.raw.readingEase || 0;
+        const readingTime = Math.ceil(wordCount / 200);
+
+        const filteredHeadings = report.raw.headings.filter((h: any) => {
+          return (
+            !searchQuery ||
+            h.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            h.tag.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        });
+
+        const getReadingEaseLabel = (score: number) => {
+          if (score >= 90)
+            return {
+              label: "Very Easy",
+              color: "text-emerald-600 bg-emerald-50",
+            };
+          if (score >= 80)
+            return { label: "Easy", color: "text-emerald-500 bg-emerald-50" };
+          if (score >= 70)
+            return { label: "Fairly Easy", color: "text-blue-500 bg-blue-50" };
+          if (score >= 60)
+            return { label: "Standard", color: "text-slate-600 bg-slate-50" };
+          if (score >= 50)
+            return {
+              label: "Fairly Difficult",
+              color: "text-orange-500 bg-orange-50",
+            };
+          if (score >= 30)
+            return {
+              label: "Difficult",
+              color: "text-orange-600 bg-orange-50",
+            };
+          return { label: "Very Difficult", color: "text-red-600 bg-red-50" };
+        };
+
+        const ease = getReadingEaseLabel(readingEase);
+
+        const handleExportContentCSV = () => {
+          const headers = ["Type", "Name", "Value"];
+          const rows = [
+            ["Stats", "Word Count", wordCount],
+            ["Stats", "Sentence Count", sentenceCount],
+            ["Stats", "Paragraph Count", paragraphCount],
+            ["Stats", "Reading Ease", readingEase.toFixed(1)],
+            ["Stats", "Reading Time", `${readingTime} min`],
+            ...report.raw.headings.map((h: any) => ["Heading", h.tag, h.text]),
+            ...(report.raw.keywords?.map((k: any) => [
+              "Keyword",
+              k.word,
+              `${k.count} (${k.density.toFixed(1)}%)`,
+            ]) || []),
+          ];
+
+          const csvContent = [
+            headers.join(","),
+            ...rows.map((r: any[]) =>
+              r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(",")
+            ),
+          ].join("\n");
+
+          const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute(
+            "download",
+            `seo_content_export_${new Date().getTime()}.csv`
+          );
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+
         return (
-          <div className="px-4 animate-in fade-in duration-300 space-y-8">
-            <section>
-              <h3 className="text-[14px] font-bold text-slate-600 uppercase tracking-widest mb-5">
-                Headings Structure
-              </h3>
-              <div className="bg-white border border-slate-200 overflow-hidden rounded-xl">
-                {report.raw.headings.map((h, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors"
-                  >
-                    <span className="text-[12px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 uppercase shrink-0 rounded-md">
-                      {h.tag}
-                    </span>
-                    <span className="text-[15px] text-slate-700 font-medium leading-relaxed">
-                      {h.text}
-                    </span>
-                  </div>
-                ))}
-                {report.raw.headings.length === 0 && (
-                  <div className="p-8 text-center text-slate-500 italic text-sm">
-                    No headings found on this page.
-                  </div>
-                )}
+          <div className="animate-in fade-in duration-300">
+            {/* Header / Stats Bar */}
+            <div className="flex items-center justify-between px-4 pb-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none mb-1.5 flex items-center gap-2">
+                  Content Analysis
+                </h3>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                    <Hash size={12} className="text-slate-400" />
+                    {wordCount} Words
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                    <Clock size={12} className="text-slate-400" />
+                    {readingTime} min read
+                  </span>
+                </div>
               </div>
-            </section>
+              <button
+                onClick={handleExportContentCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-900 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+              >
+                <Download size={13} strokeWidth={2.5} />
+                Export
+              </button>
+            </div>
+
+            <div className="space-y-6 px-4 pb-8">
+              {/* Content Score Dashboard */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <PieChart size={16} className="text-indigo-500" />
+                      <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wider">
+                        Readability Score
+                      </span>
+                    </div>
+                    <span
+                      className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${ease.color}`}
+                    >
+                      {ease.label}
+                    </span>
+                  </div>
+                  <div className="flex items-end gap-3">
+                    <span className="text-4xl font-black text-slate-800 leading-none">
+                      {readingEase.toFixed(0)}
+                    </span>
+                    <span className="text-sm font-bold text-slate-400 mb-1">
+                      / 100
+                    </span>
+                  </div>
+                  <p className="mt-3 text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Based on the Flesch Reading Ease algorithm. Higher scores
+                    indicate material that is easier to read.
+                  </p>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlignLeft size={14} className="text-blue-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Structure
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] text-slate-600">
+                        Paragraphs
+                      </span>
+                      <span className="text-[12px] font-bold text-slate-800">
+                        {paragraphCount}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] text-slate-600">
+                        Sentences
+                      </span>
+                      <span className="text-[12px] font-bold text-slate-800">
+                        {sentenceCount}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MousePointer2 size={14} className="text-emerald-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Analysis
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] text-slate-600">
+                        Avg. Words/Sent
+                      </span>
+                      <span className="text-[12px] font-bold text-slate-800">
+                        {sentenceCount > 0
+                          ? (wordCount / sentenceCount).toFixed(1)
+                          : 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] text-slate-600">
+                        Text/HTML
+                      </span>
+                      <span className="text-[12px] font-bold text-slate-800">
+                        {report.raw.textToHtmlRatio?.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Keyword Analysis */}
+              {report.raw.keywords && report.raw.keywords.length > 0 && (
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+                    <Type size={14} className="text-indigo-500" />
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      Top Keywords Found
+                    </span>
+                  </div>
+                  <div className="p-4 flex flex-wrap gap-2">
+                    {report.raw.keywords.map((k: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg group hover:border-indigo-200 transition-colors"
+                      >
+                        <span className="text-[13px] font-bold text-slate-700">
+                          {k.word}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-100 group-hover:text-indigo-500 transition-colors">
+                          {k.count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Headings Section */}
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layout size={14} className="text-indigo-500" />
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      Headings Structure
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Search
+                      size={12}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search headings..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-white border border-slate-200 pl-7 pr-2 py-1 text-[10px] font-medium rounded-md w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                    />
+                  </div>
+                </div>
+                <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
+                  {filteredHeadings.map((h: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 p-3.5 hover:bg-slate-50 transition-colors"
+                    >
+                      <span
+                        className={`text-[10px] font-black w-8 h-5 flex items-center justify-center shrink-0 rounded ${
+                          h.tag === "H1"
+                            ? "bg-indigo-600 text-white"
+                            : h.tag === "H2"
+                            ? "bg-indigo-100 text-indigo-700"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {h.tag}
+                      </span>
+                      <span className="text-[13px] text-slate-700 font-medium leading-tight">
+                        {h.text}
+                      </span>
+                    </div>
+                  ))}
+                  {filteredHeadings.length === 0 && (
+                    <div className="p-8 text-center text-slate-400 text-xs italic">
+                      No headings found.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         );
 
       case "Images":
-        const filteredImages = report.raw.images.filter((img) => {
+        const filteredImages = report.raw.images.filter((img: any) => {
           const matchesFilter =
             imageFilter === "all" ||
             (imageFilter === "missing-alt" && img.type === "img" && !img.alt);
@@ -181,7 +437,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
 
         const handleExportImagesCSV = () => {
           const headers = ["Source URL", "Alt Text", "Width", "Height"];
-          const rows = filteredImages.map((img) => [
+          const rows = filteredImages.map((img: any) => [
             `"${img.src.replace(/"/g, '""')}"`,
             `"${(img.alt || "").replace(/"/g, '""')}"`,
             img.naturalWidth || "",
@@ -193,7 +449,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
 
           const csvContent = [
             headers.join(","),
-            ...rows.map((r) => r.join(",")),
+            ...rows.map((r: any) => r.join(",")),
           ].join("\n");
 
           const blob = new Blob([csvContent], {
@@ -255,7 +511,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
                     Missing Alt (
                     {
                       report.raw.images.filter(
-                        (i) => i.type === "img" && !i.alt
+                        (i: any) => i.type === "img" && !i.alt
                       ).length
                     }
                     )
@@ -278,7 +534,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
               </div>
 
               <div className="divide-y divide-slate-50 max-h-[550px] overflow-y-auto">
-                {filteredImages.map((img, idx) => {
+                {filteredImages.map((img: any, idx: number) => {
                   const isExpanded = expandedImageId === idx;
                   return (
                     <div key={idx} className="flex flex-col">
@@ -444,9 +700,9 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
         );
 
       case "Links":
-        const internalLinks = report.raw.links.filter((l) => l.isInternal);
-        const externalLinks = report.raw.links.filter((l) => l.isExternal);
-        const filteredLinks = report.raw.links.filter((l) => {
+        const internalLinks = report.raw.links.filter((l: any) => l.isInternal);
+        const externalLinks = report.raw.links.filter((l: any) => l.isExternal);
+        const filteredLinks = report.raw.links.filter((l: any) => {
           const matchesCategory =
             linkFilter === "all" ||
             (linkFilter === "internal" ? l.isInternal : l.isExternal);
@@ -459,7 +715,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
 
         const handleExportCSV = () => {
           const headers = ["Text", "URL", "Type", "Rel", "Target"];
-          const rows = filteredLinks.map((l) => [
+          const rows = filteredLinks.map((l: any) => [
             `"${(l.text || "No anchor text").replace(/"/g, '""')}"`,
             `"${l.href.replace(/"/g, '""')}"`,
             l.isInternal ? "Internal" : "External",
@@ -469,7 +725,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
 
           const csvContent = [
             headers.join(","),
-            ...rows.map((r) => r.join(",")),
+            ...rows.map((r: any) => r.join(",")),
           ].join("\n");
 
           const blob = new Blob([csvContent], {
@@ -558,7 +814,7 @@ export const AuditResults: React.FC<AuditResultsProps> = ({
               </div>
 
               <div className="divide-y divide-slate-50 max-h-[550px] overflow-y-auto">
-                {filteredLinks.map((link, idx) => {
+                {filteredLinks.map((link: any, idx: number) => {
                   const isExpanded = expandedLinkId === idx;
                   return (
                     <div key={idx} className="flex flex-col">

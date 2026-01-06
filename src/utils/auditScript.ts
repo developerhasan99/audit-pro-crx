@@ -156,6 +156,80 @@ export const runPageAudit = () => {
     };
   };
 
+  const getWordCount = () => {
+    const text = document.body.innerText || "";
+    const words = text.trim().split(/\s+/);
+    return words.length;
+  };
+
+  const getTextToHtmlRatio = () => {
+    const htmlSize = document.documentElement.innerHTML.length;
+    const textSize = document.body.innerText.length;
+    return htmlSize > 0 ? (textSize / htmlSize) * 100 : 0;
+  };
+
+  const getParagraphCount = () => {
+    return document.querySelectorAll("p").length;
+  };
+
+  const getSentenceCount = () => {
+    const text = document.body.innerText || "";
+    return text.split(/[.!?]+/).filter((s) => s.trim().length > 0).length;
+  };
+
+  const calculateReadingEase = (words: number, sentences: number) => {
+    if (words === 0 || sentences === 0) return 0;
+
+    // Simple syllable estimator
+    const text = document.body.innerText || "";
+    const syllableCount =
+      text.toLowerCase().match(/[aeiouy]{1,2}/g)?.length || 0;
+
+    // Flesch Reading Ease Formula
+    const score =
+      206.835 - 1.015 * (words / sentences) - 84.6 * (syllableCount / words);
+    return Math.min(100, Math.max(0, score));
+  };
+
+  const getKeywords = () => {
+    const text = (document.body.innerText || "").toLowerCase();
+    const words = text.match(/\b\w{4,}\b/g) || []; // only words with 4+ chars
+    const stopWords = new Set([
+      "this",
+      "that",
+      "with",
+      "from",
+      "your",
+      "have",
+      "more",
+      "will",
+      "about",
+      "their",
+      "there",
+      "what",
+      "which",
+    ]);
+
+    const freq: { [key: string]: number } = {};
+    words.forEach((word) => {
+      if (!stopWords.has(word) && isNaN(Number(word))) {
+        freq[word] = (freq[word] || 0) + 1;
+      }
+    });
+
+    return Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([word, count]) => ({
+        word,
+        count,
+        density: (count / words.length) * 100,
+      }));
+  };
+
+  const wordCount = getWordCount();
+  const sentenceCount = getSentenceCount();
+
   return {
     url: window.location.href,
     title: document.title,
@@ -170,6 +244,8 @@ export const runPageAudit = () => {
       title: getMeta("og:title"),
       type: getMeta("og:type"),
       image: getMeta("og:image"),
+      description: getMeta("og:description"),
+      site_name: getMeta("og:site_name"),
     },
     headings: getHeadings(),
     images: getImages(),
@@ -178,6 +254,12 @@ export const runPageAudit = () => {
     performance: getPerformanceMetrics(),
     mobile: getMobileSignals(),
     security: getSecuritySignals(),
+    wordCount,
+    sentenceCount,
+    paragraphCount: getParagraphCount(),
+    readingEase: calculateReadingEase(wordCount, sentenceCount),
+    keywords: getKeywords(),
+    textToHtmlRatio: getTextToHtmlRatio(),
   };
 };
 
